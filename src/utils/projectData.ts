@@ -2,6 +2,7 @@ export interface Team {
   id: string
   name: string
   imgURL: string
+  teamname: string
 }
 
 export const ProjectData = [

@@ -5,8 +5,9 @@ import { FC, useEffect, useState } from "react"
 import { BinaryLike, createHmac, KeyObject } from "crypto"
 import { ProjectData, Team } from "@utils/projectData"
 import { AnimatePresence, motion } from "framer-motion"
-import { getTeams, getVote, updateVote } from "@lib/db"
+import { getTeams, getVote, updateTeams, updateVote } from "@lib/db"
 import { useRouter } from "next/router"
+import jwt_decode from "jwt-decode"
 
 const ColorSet = {
   blue: { idle: "border-blue-500", active: "bg-blue-600", hover: "hover:bg-blue-600" },
@@ -20,7 +21,7 @@ type ColorSetTypes = "blue" | "green" | "red" | "yellow"
 export const getServerSideProps: GetServerSideProps<{ ticketID: string }> = async ({ query }) => {
   const { ticketID, hMap } = query
 
-  const hmac = createHmac("sha256", process.env.HASH_KEY as BinaryLike | KeyObject) // hardcode
+  const hmac = createHmac("sha256", process.env.HASH_KEY as BinaryLike | KeyObject)
     .update(ticketID as string)
     .digest("hex")
 
@@ -33,6 +34,8 @@ export const getServerSideProps: GetServerSideProps<{ ticketID: string }> = asyn
       props: { ticketID: ticketID as string },
     }
   } else {
+    // const decodedHeader = jwt_decode(hMap)
+
     return {
       props: { ticketID: ticketID as string },
     }
@@ -41,10 +44,11 @@ export const getServerSideProps: GetServerSideProps<{ ticketID: string }> = asyn
 
 const TeamCard: FC<{
   name: string
+  teamname: string
   imgURL: string
   colorSet: ColorSetTypes | null
   onClick: () => void
-}> = ({ name, imgURL, onClick, colorSet = null }) => {
+}> = ({ name, teamname, imgURL, onClick, colorSet = null }) => {
   return (
     <button onClick={onClick} className="w-full max-w-xs font-sans normal-case">
       <div
@@ -55,8 +59,15 @@ const TeamCard: FC<{
           "flex flex-col items-center justify-center gap-6 border p-6 transition-all hover:brightness-95"
         )}
       >
-        <img src={imgURL} className="aspect-video w-4/5 object-fill" />
-        <h2 className="text-lg">{name}</h2>
+        {imgURL ? (
+          <img src={imgURL} className="aspect-video w-4/5 object-fill" />
+        ) : (
+          <div className="aspect-video w-4/5 object-fill"></div>
+        )}
+        <div>
+          <h2 className="text-lg">{name}</h2>
+          <p className="text-gray-600">{teamname}</p>
+        </div>
       </div>
     </button>
   )
@@ -72,9 +83,6 @@ const Home: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>> = (
     red: null | string
     yellow: null | string
   }>({ blue: null, green: null, red: null, yellow: null })
-
-  const router = useRouter()
-
   const checkData = (teamID: string) => {
     const out = Object.entries(selectedTeams).find(([color, selectedTeamID]) => teamID === selectedTeamID)
 
@@ -88,7 +96,6 @@ const Home: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>> = (
   useEffect(() => {
     getVote(ticketID).then((data) => {
       if (!data) return
-      if (data.submitted) router.push("/success")
 
       setSelectedTeams({ blue: data.blue, green: data.green, red: data.red, yellow: data.yellow })
     })
@@ -142,32 +149,11 @@ const Home: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>> = (
               key={team.id}
               name={team.name}
               imgURL={team.imgURL}
+              teamname={team.teamname}
               colorSet={checkData(team.id) as ColorSetTypes | null}
             />
           ))}
         </section>
-
-        <AnimatePresence>
-          {Object.values(selectedTeams).every((e) => e) && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="mt-6 flex flex-col items-center gap-4 uppercase"
-            >
-              <button
-                onClick={() => {
-                  updateVote(ticketID, { submitted: true })
-                  router.push("/success")
-                }}
-                className="w-36 border border-black bg-white px-6 py-3 uppercase transition-colors hover:bg-gray-100"
-              >
-                Submit
-              </button>
-              <p>Warning: After pressing the button, you will not be able to edit your submissions again</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </main>
     </DescribeRoute>
   )
