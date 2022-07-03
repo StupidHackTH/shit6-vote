@@ -125,7 +125,7 @@ const Home: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>> = (
           {Object.keys(ColorSet)
             .filter((colorSet) => colorSet !== "normal")
             .map((colorSet) => (
-              <div className="flex w-16 flex-col items-center gap-2">
+              <div key={colorSet} className="flex w-16 flex-col items-center gap-2">
                 <button
                   onClick={() => setSelectedColor(colorSet as "red" | "green" | "blue" | "yellow")}
                   key={colorSet}
