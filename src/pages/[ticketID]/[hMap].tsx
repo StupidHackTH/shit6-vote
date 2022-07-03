@@ -73,6 +73,13 @@ const TeamCard: FC<{
   )
 }
 
+const Categories: Record<string, string> = {
+  blue: "most aesthetically pleasing",
+  green: "most impressive technology",
+  red: "non stupid award",
+  yellow: "most stupid award",
+}
+
 const Home: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>> = ({ ticketID }) => {
   const [teams, setTeams] = useState<Team[]>([])
 
@@ -114,20 +121,24 @@ const Home: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>> = (
 
         <p>โหวตเลย !</p>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-6">
           {Object.keys(ColorSet)
             .filter((colorSet) => colorSet !== "normal")
             .map((colorSet) => (
-              <button
-                onClick={() => setSelectedColor(colorSet as "red" | "green" | "blue" | "yellow")}
-                key={colorSet}
-                className={classNames(
-                  ColorSet[colorSet as ColorSetTypes].idle,
-                  ColorSet[colorSet as ColorSetTypes].hover,
-                  selectedColor === colorSet && ColorSet[colorSet as ColorSetTypes].active,
-                  "h-10 w-10 rounded-full border transition-colors"
-                )}
-              />
+              <div className="flex w-16 flex-col items-center gap-2">
+                <button
+                  onClick={() => setSelectedColor(colorSet as "red" | "green" | "blue" | "yellow")}
+                  key={colorSet}
+                  className={classNames(
+                    ColorSet[colorSet as ColorSetTypes].idle,
+                    ColorSet[colorSet as ColorSetTypes].hover,
+                    selectedColor === colorSet && ColorSet[colorSet as ColorSetTypes].active,
+                    "h-10 w-10 rounded-full border transition-colors"
+                  )}
+                />
+
+                <p className="text-ellipsis break-words text-center text-xs">{Categories[colorSet]}</p>
+              </div>
             ))}
         </div>
 
